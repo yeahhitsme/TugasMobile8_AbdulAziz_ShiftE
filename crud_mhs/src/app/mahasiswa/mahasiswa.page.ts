@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../service/api.service';
-import { ModalController } from '@ionic/angular';
+import { ModalController, AlertController } from '@ionic/angular';
 
 @Component({
   selector: 'app-mahasiswa',
@@ -14,7 +14,11 @@ export class MahasiswaPage implements OnInit {
   nama: any;
   jurusan: any;
 
-  constructor(private api: ApiService, private modal: ModalController) {}
+  constructor(
+    private api: ApiService, 
+    private modal: ModalController, 
+    private alertCtrl: AlertController 
+  ) {}
 
   ngOnInit() {
     this.getMahasiswa();
@@ -77,18 +81,37 @@ export class MahasiswaPage implements OnInit {
     }
   }
 
-  hapusMahasiswa(id: any) {
-    this.api.hapus(id,
-      'hapus.php?id=').subscribe({
-        next: (res: any) => {
-          console.log('sukses', res);
-          this.getMahasiswa();
-          console.log('berhasil hapus data');
+  async hapusMahasiswa(id: any) {
+    const alert = await this.alertCtrl.create({
+      header: 'Konfirmasi Hapus',
+      message: 'Apakah Anda yakin ingin menghapus data mahasiswa ini?',
+      buttons: [
+        {
+          text: 'Batal',
+          role: 'cancel',
+          handler: () => {
+            console.log('Penghapusan dibatalkan');
+          },
         },
-        error: (error: any) => {
-          console.log('gagal');
-        }
-      })
+        {
+          text: 'Hapus',
+          handler: () => {
+            this.api.hapus(id, 'hapus.php?id=').subscribe({
+              next: (res: any) => {
+                console.log('Sukses hapus data:', res);
+                this.getMahasiswa();
+                console.log('Berhasil hapus data');
+              },
+              error: (error: any) => {
+                console.log('Gagal hapus data:', error);
+              },
+            });
+          },
+        },
+      ],
+    });
+
+    await alert.present();
   }
 
   ambilMahasiswa(id: any) {
